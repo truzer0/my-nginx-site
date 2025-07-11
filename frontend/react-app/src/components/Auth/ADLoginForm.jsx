@@ -1,85 +1,66 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
-const ADLoginForm = ({
-  username,
-  onBack,
-  onSuccess,
-  error,
-  setError,
-  isLoading,
-  setIsLoading,
-}) => {
+export const ADLoginForm = ({ username, onSuccess }) => {
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError({ type: '', message: '' });
-
-    if (!password) {
-      setError({ type: 'ad', message: 'Введите пароль' });
-      return;
-    }
-
-    setIsLoading(true);
-
     try {
-      const response = await fetch('/api/authorization', {
+      const response = await fetch('/api/ad-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password })
       });
-
-      if (!response.ok) {
-        throw new Error(`Ошибка ${response.status}: ${await response.text()}`);
-      }
-
+      
       const data = await response.json();
-      onSuccess(data.token);
-    } catch (error) {
-      console.error('Ошибка при аутентификации через AD:', error.message);
-      setError({ type: 'ad', message: 'Неверный логин или пароль' });
+      if (data.firstLogin) {
+        onSuccess(username, true);
+      } else {
+        localStorage.setItem('token', data.token);
+        window.location.href = '/';
+      }
+    } catch (err) {
+      setError('Неверные учетные данные');
       setPassword('');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <div className="auth-card">
-      <div className="back-link" onClick={onBack}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-        Назад
-      </div>
-
-      <h1>Вход через Active Directory</h1>
-
-      <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="adPassword">Пароль AD</label>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-4"
+    >
+      <p className="text-gray-300">Вход для <span className="font-medium">{username}</span></p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm text-gray-300 mb-1">Пароль AD</label>
           <input
             type="password"
-            id="adPassword"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Введите ваш пароль"
+            className="w-full bg-gray-800 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 text-white"
             required
-            autoComplete="current-password"
-            autoFocus
           />
-          {error.type === 'ad' && (
-            <div className="error-message visible">{error.message}</div>
+          {error && (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-red-400 text-sm mt-1"
+            >
+              {error}
+            </motion.p>
           )}
         </div>
-
-        <button type="submit" className={isLoading ? 'loading' : ''}>
+        <button
+          type="submit"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition"
+        >
           Войти
         </button>
       </form>
-    </div>
+    </motion.div>
   );
 };
-
-export default ADLoginForm;

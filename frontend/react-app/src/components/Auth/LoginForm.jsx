@@ -1,76 +1,60 @@
-const LoginForm = ({
-  username,
-  setUsername,
-  setCurrentView,
-  setError,
-  isLoading,
-  setIsLoading,
-}) => {
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+
+export const LoginForm = ({ onSuccess }) => {
+  const [username, setUsername] = useState('');
+  const [error, setError] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError({ type: '', message: '' });
-
     if (!username.trim()) {
-      setError({ type: 'login', message: 'Введите имя пользователя' });
+      setError('Введите имя пользователя');
       return;
     }
-
-    setIsLoading(true);
-
+    
     try {
       const response = await fetch('/api/check-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username })
       });
-
-      if (!response.ok) {
-        throw new Error(`Ошибка ${response.status}: ${await response.text()}`);
-      }
-
+      
       const data = await response.json();
-      setCurrentView(data.exists ? 'db' : 'ad');
-    } catch (error) {
-      console.error('Ошибка при проверке пользователя:', error.message);
-      setError({ type: 'login', message: 'Ошибка при проверке пользователя' });
-    } finally {
-      setIsLoading(false);
+      onSuccess(username, data.exists);
+    } catch (err) {
+      setError('Ошибка соединения');
     }
   };
 
   return (
-    <div className="auth-card">
-      <div className="logo">ЦУС</div>
-      <h1>Вход в систему</h1>
-
-      <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="username">Имя пользователя</label>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm text-gray-300 mb-1">Имя пользователя</label>
           <input
             type="text"
-            id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Введите ваш логин"
-            required
-            autoComplete="username"
+            className="w-full bg-gray-800 bg-opacity-50 border border-gray-700 rounded-lg px-4 py-3 text-white"
             autoFocus
           />
-          {error.type === 'login' && (
-            <div className="error-message visible">{error.message}</div>
+          {error && (
+            <motion.p 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-red-400 text-sm mt-1"
+            >
+              {error}
+            </motion.p>
           )}
         </div>
-
-        <button type="submit" className={isLoading ? 'loading' : ''}>
+        <button
+          type="submit"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition"
+        >
           Продолжить
         </button>
       </form>
-
-      <div className="auth-footer">
-        Система авторизации отдела ЦУС
-      </div>
-    </div>
+    </>
   );
 };
-
-export default LoginForm;

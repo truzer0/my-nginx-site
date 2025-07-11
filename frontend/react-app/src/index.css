@@ -46,3 +46,7 @@ button {
   padding: 20px;
   text-align: center;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
