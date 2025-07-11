@@ -1,0 +1,123 @@
+<form id="editArticleForm">
+    <div class="form-group">
+        <label for="articleTitle">Заголовок</label>
+        <input type="text" id="articleTitle" class="form-control" required>
+    </div>
+    <div class="form-group">
+        <label for="articleContent">Содержание</label>
+        <textarea id="articleContent" class="form-control" rows="10" required></textarea>
+    </div>
+    <div class="form-group">
+        <label for="articleCategory">Категория</label>
+        <select id="articleCategory" class="form-control">
+            <option value="">Без категории</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <button type="button" id="deleteArticle" class="btn btn-danger">Удалить</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+        
+        if (!articleId) {
+            window.location.href = '/';
+            return;
+        }
+        
+        // Загружаем категории
+        const categoriesResponse = await fetch('/api/categories');
+        if (categoriesResponse.ok) {
+            const categories = await categoriesResponse.json();
+            const categorySelect = document.getElementById('articleCategory');
+            
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        // Загружаем статью
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/articles/${articleId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Статья не найдена');
+            
+            const article = await response.json();
+            
+            document.getElementById('articleTitle').value = article.title;
+            document.getElementById('articleContent').value = article.content;
+            document.getElementById('articleCategory').value = article.category_id || '';
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Не удалось загрузить статью');
+            window.location.href = '/profile.html';
+        }
+    });
+    
+    // Обработчик формы
+    document.getElementById('editArticleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+        const token = localStorage.getItem('token');
+        
+        try {
+            const response = await fetch(`/api/articles/${articleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: document.getElementById('articleTitle').value,
+                    content: document.getElementById('articleContent').value,
+                    category_id: document.getElementById('articleCategory').value || null
+                })
+            });
+            
+            if (!response.ok) throw new Error('Ошибка сохранения');
+            
+            alert('Статья успешно обновлена!');
+            window.location.href = '/profile.html';
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert(error.message);
+        }
+    });
+    
+    // Удаление статьи
+    document.getElementById('deleteArticle').addEventListener('click', async () => {
+        if (!confirm('Вы уверены, что хотите удалить эту статью?')) return;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+        const token = localStorage.getItem('token');
+        
+        try {
+            const response = await fetch(`/api/articles/${articleId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) throw new Error('Ошибка удаления');
+            
+            alert('Статья удалена!');
+            window.location.href = '/profile.html';
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert(error.message);
+        }
+    });
+</script>

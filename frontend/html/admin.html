@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админская панель</title>
+    <link rel="icon" href="data:image/jpeg;base64,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" type="image/jpeg">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --dark-bg: #1a1a2e;
+            --dark-card-bg: #2d2d2d;
+            --darker-bg: #1f1f1f;
+            --text-color: #e0e0e0;
+            --light-text: #f5f5f5;
+            --border-color: #444444;
+            --error-color: #ff6b6b;
+            --success-color: #4caf50;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--darker-bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Новый стиль для секции входа */
+        #loginSection {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: var(--dark-card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #loginSection h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--light-text);
+            font-size: 22px;
+        }
+
+        #loginSection input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            background-color: #3a3a3a;
+            color: var(--light-text);
+            font-size: 16px;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+
+        #loginSection input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        #loginButton {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+
+        #loginButton:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #loginMessage {
+            margin-top: 15px;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            display: none;
+        }
+
+        #loginMessage.visible {
+            display: block;
+        }
+
+        /* Админская секция (остается без изменений) */
+        #adminSection {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        #adminSection h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.5em;
+        }
+
+        /* Остальные стили остаются без изменений */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9em;
+        }
+        
+        /* Профиль пользователя */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--dark-card-bg);
+            border-radius: var(--border-radius);
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-name {
+            margin: 0;
+            font-size: 1.2em;
+            color: var(--primary-color);
+        }
+
+        .profile-role {
+            margin: 5px 0 0;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        /* Формы */
+        form {
+            background-color: var(--dark-card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            background-color: #3a3a3a;
+            color: var(--light-text);
+        }
+        
+        form button {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: var(--dark-card-bg);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: var(--darker-bg);
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Кнопки действий */
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 3px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .delete-btn {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        .edit-btn {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .edit-btn:hover {
+            background-color: #e0a800;
+        }
+
+        /* Поэтапная форма добавления ссылки */
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        /* Выпадающие роли */
+        .role-dropdown {
+            display: none;
+            margin-top: 5px;
+        }
+
+        .role-dropdown.active {
+            display: flex;
+            gap: 5px;
+        }
+
+        .role-option {
+            padding: 5px 10px;
+            background-color: #3a3a3a;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .role-option:hover {
+            background-color: var(--primary-color);
+        }
+        .user-profile-link {
+           display: block;
+           text-decoration: none;
+           color: inherit;
+           margin-bottom: 20px;
+       }
+
+        .user-profile-link:hover .user-profile {
+             background-color: rgba(67, 97, 238, 0.1);
+             transition: var(--transition);
+       }
+
+        /* Сообщения */
+        #message {
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--border-radius);
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginSection">
+        <h1>Вход в админ-панель</h1>
+        <input type="text" id="username" placeholder="Введите имя пользователя" autofocus />
+        <input type="password" id="password" placeholder="Введите пароль" />
+        <button id="loginButton">Войти</button>
+        <div id="loginMessage"></div>
+    </div>
+
+    <div id="adminSection" class="hidden">
+        <!-- Остальная часть кода остается без изменений -->
+        <!-- Кликабельный профиль пользователя -->
+        <a href="profile.html" class="user-profile-link">
+            <div class="user-profile" id="currentUserProfile">
+                <img id="userAvatar" class="profile-avatar" src=" " alt="Аватар">
+                <div class="profile-info">
+                    <h3 class="profile-name" id="currentUserName">Загрузка...</h3>
+                    <p class="profile-role" id="currentUserRole"></p>
+                </div>
+            </div>
+        </a>
+
+        <div class="admin-header">
+            <h1>Админская панель</h1>
+            <div class="nav-buttons">
+                <button class="nav-button" onclick="location.href='index.html'">Главная</button>
+                <button class="nav-button" onclick="location.href='about.php'">Для админов</button>
+                <button class="nav-button" onclick="location.href='contact.html'">Контакты</button>
+                <button class="nav-button" onclick="location.href='app.html'">Приложения</button>
+                <button class="nav-button" id="logoutButton">Выход</button>
+            </div>
+        </div>
+     
+        <!-- Поэтапная форма для добавления ссылок -->
+        <form id="linkForm">
+            <div id="step1" class="form-step active">
+                <label for="urlInput">Введите URL:</label>
+                <input type="text" id="urlInput" placeholder="Введите ссылку..." required />
+                <button type="button" onclick="nextStep()">Далее</button>
+            </div>
+            
+            <div id="step2" class="form-step">
+                <label for="buttonTextInput">Введите текст для кнопки:</label>
+                <input type="text" id="buttonTextInput" placeholder="Текст кнопки..." required />
+                <button type="submit">Добавить ссылку</button>
+                <button type="button" onclick="prevStep()">Назад</button>
+            </div>
+        </form>
+
+        <div id="message"></div>
+
+        <!-- Список ссылок -->
+        <h2>Список ссылок</h2>
+        <table id="linkTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Текст кнопки</th>
+                    <th>URL</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <h2>Список пользователей</h2>
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Аватар</th>
+                    <th>Роль</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    
+    <script>
+    // Обновленные функции для отображения сообщений
+    function showMessage(text, type) {
+        const messageEl = document.getElementById('message');
+        messageEl.textContent = text;
+        messageEl.className = type;
+    }
+
+    function showLoginMessage(text) {
+        const messageEl = document.getElementById('loginMessage');
+        messageEl.textContent = text;
+        messageEl.classList.add('visible');
+    }
+
+    function hideLoginMessage() {
+        const messageEl = document.getElementById('loginMessage');
+        messageEl.classList.remove('visible');
+    }
+
+    // Функции для поэтапной формы
+    function nextStep() {
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+    }
+
+    function prevStep() {
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step1').classList.add('active');
+    }
+
+    async function authenticate(username, password) {
+        hideLoginMessage();
+        
+        if (!username || !password) {
+            showLoginMessage("Пожалуйста, заполните все поля");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/authorization', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const textResponse = await response.text();
+            console.log('Ответ сервера:', textResponse);
+
+            if (!response.ok) {
+                throw new Error(`Ошибка ${response.status}: ${textResponse}`);
+            }
+
+            const data = JSON.parse(textResponse);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('role', data.role);
+            console.log('Аутентификация успешна, токен:', data.token);
+
+            if (data.role === 'admin' || data.role === 'editor') {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('adminSection').classList.remove('hidden');
+                loadCurrentUserProfile();
+                loadLinks();
+                loadUsers();
+            } else {
+                showLoginMessage("У вас нет доступа к админской панели");
+            }
+
+            clearLoginFields();
+        } catch (error) {
+            console.error('Ошибка при аутентификации:', error.message);
+            showLoginMessage("Ошибка при входе. Проверьте имя пользователя и пароль.");
+        }
+    }
+
+    // Остальной JavaScript код остается без изменений
+    // Загрузка профиля текущего пользователя
+    async function loadCurrentUserProfile() {
+        try {
+            const response = await fetch('/api/users/me', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки профиля');
+            }
+
+            const user = await response.json();
+            
+            // Обновляем информацию в профиле
+            document.getElementById('currentUserName').textContent = user.name || user.username;
+            document.getElementById('currentUserRole').textContent = `Роль: ${user.role || 'не определена'}`;
+            
+            // Устанавливаем аватарку
+            const avatar = document.getElementById('userAvatar');
+            if (user.profile_image) {
+                avatar.src = `/uploads/${user.profile_image}?t=${Date.now()}`;
+                avatar.onerror = () => {
+                    avatar.src = ' '; // Установите путь к изображению-заглушке
+                };
+            } else {
+                avatar.src = '/uploads/default-avatar.jpg '; // Установите путь к изображению-заглушке
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки профиля:', error);
+            document.getElementById('currentUserName').textContent = "Ошибка загрузки";
+            document.getElementById('currentUserRole').textContent = "";
+        }
+    }
+
+    function clearLoginFields() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    } 
+    
+    function loadLinks() {
+        fetch('/api/links', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка при получении списка ссылок');
+            return response.json();
+        })
+        .then(links => {
+            const tbody = document.querySelector('#linkTable tbody');
+            tbody.innerHTML = '';
+            links.forEach(link => {
+                const tr = document.createElement('tr');
+
+                // ID
+                const tdId = document.createElement('td');
+                tdId.textContent = link.id;
+                tr.appendChild(tdId);
+
+                // Текст кнопки
+                const tdText = document.createElement('td');
+                tdText.textContent = link.button_text;
+                tr.appendChild(tdText);
+
+                // URL
+                const tdUrl = document.createElement('td');
+                tdUrl.textContent = link.url;
+                tr.appendChild(tdUrl);
+
+                // Действия (удаление)
+                const tdActions = document.createElement('td');
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Удалить';
+                deleteBtn.className = 'action-btn delete-btn';
+                deleteBtn.onclick = () => {
+                    if (confirm(`Вы уверены, что хотите удалить ссылку с ID ${link.id}?`)) {
+                        fetch(`/api/links/${link.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            }
+                        })
+                        .then(res => {
+                            if (!res.ok) throw new Error('Ошибка при удалении ссылки');
+                            return res.json();
+                        })
+                        .then(data => {
+                            showMessage(data.message || 'Ссылка удалена', 'success');
+                            loadLinks(); // Обновляем список
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            showMessage('Ошибка при удалении ссылки', 'error');
+                        });
+                    }
+                };
+
+                tdActions.appendChild(deleteBtn);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(error => {
+            console.error(error);
+            showMessage('Ошибка при загрузке ссылок', 'error');
+        });
+    }
+    
+    function loadUsers() {
+        fetch('/api/users', {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка при получении списка пользователей');
+            }
+            return response.json();
+        })
+        .then(users => {
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+
+                // ID
+                const tdId = document.createElement('td');
+                tdId.textContent = user.id;
+                tr.appendChild(tdId);
+
+                // Имя
+                const tdName = document.createElement('td');
+                tdName.textContent = user.name || user.username;
+                tr.appendChild(tdName);
+
+                // Аватар
+                const tdAvatar = document.createElement('td');
+                const avatarImg = document.createElement('img');
+                avatarImg.style.width = '40px';
+                avatarImg.style.height = '40px';
+                avatarImg.style.borderRadius = '50%';
+                avatarImg.style.objectFit = 'cover';
+                
+                if (user.profile_image) {
+                    avatarImg.src = `/uploads/${user.profile_image}`;
+                    avatarImg.onerror = () => {
+                        avatarImg.src = ''; // или установите изображение-заглушку
+                    };
+                }
+                
+                avatarImg.alt = 'Аватар';
+                tdAvatar.appendChild(avatarImg);
+                tr.appendChild(tdAvatar);
+
+                // Роль
+                const tdRole = document.createElement('td');
+                tdRole.textContent = user.role;
+                tr.appendChild(tdRole);
+
+                // Действия
+                const tdActions = document.createElement('td');
+
+                // Удаление
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Удалить';
+                deleteBtn.className = 'action-btn delete-btn';
+                deleteBtn.onclick = () => deleteUser(user.id);
+                
+                // Редактировать роль
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Изменить роль';
+                editBtn.className = 'action-btn edit-btn';
+                editBtn.onclick = (e) => {
+                    // Скрываем все открытые dropdown
+                    document.querySelectorAll('.role-dropdown').forEach(d => d.classList.remove('active'));
+                    
+                    // Создаем или находим dropdown для этого пользователя
+                    let dropdown = tr.querySelector('.role-dropdown');
+                    if (!dropdown) {
+                        dropdown = document.createElement('div');
+                        dropdown.className = 'role-dropdown';
+                        
+                        const roles = ['user', 'editor', 'admin'];
+                        roles.forEach(role => {
+                            const option = document.createElement('div');
+                            option.className = 'role-option';
+                            option.textContent = role;
+                            option.onclick = () => changeUserRole(user.id, role);
+                            dropdown.appendChild(option);
+                        });
+                        
+                        tdActions.appendChild(dropdown);
+                    }
+                    
+                    dropdown.classList.toggle('active');
+                    e.stopPropagation(); // Предотвращаем всплытие события
+                };
+
+                tdActions.appendChild(deleteBtn);
+                tdActions.appendChild(editBtn);
+                
+                tr.appendChild(tdActions);
+                
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(error => {
+            console.error(error);
+            showMessage('Ошибка при загрузке пользователей', 'error');
+        });
+    }
+
+    function changeUserRole(userId, newRole) {
+        fetch(`/api/users/${userId}/role`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify({ role: newRole })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка при изменении роли');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showMessage(data.message || 'Роль успешно изменена', 'success');
+            loadUsers(); // Обновляем список пользователей
+        })
+        .catch(error => {
+            console.error(error);
+            showMessage('Произошла ошибка при изменении роли.', 'error');
+        });
+    }
+
+    // Функция удаления пользователя
+    function deleteUser(userId) {
+        if (!confirm(`Вы уверены, что хотите удалить пользователя с ID ${userId}?`)) return;
+
+        fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка при удалении пользователя');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showMessage(data.message || 'Пользователь удален', 'success');
+            loadUsers();
+        })
+        .catch(error => {
+            console.error(error);
+            showMessage('Произошла ошибка при удалении пользователя.', 'error');
+        });
+    }
+
+    // Обработчик события для кнопки входа
+    document.getElementById('loginButton').addEventListener('click', () => {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        authenticate(username, password);
+    });
+
+    // Обработчик события для формы добавления ссылок
+    document.getElementById('linkForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const url = document.getElementById('urlInput').value;
+        const buttonText = document.getElementById('buttonTextInput').value;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error("Токен отсутствует");
+
+            const response = await fetch('/api/links', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ url, button_text: buttonText })
+            });
+
+            if (!response.ok) throw new Error("Ошибка добавления ссылки");
+
+            const data = await response.json();
+            showMessage(data.message || 'Ссылка успешно добавлена', 'success');
+            
+            loadLinks();
+            clearLinkFormFields();
+            prevStep(); // Возвращаемся на первый шаг
+        } catch (error) {
+            console.error("Ошибка при добавлении ссылки:", error.message);
+            showMessage("Ошибка при добавлении ссылки: " + error.message, 'error');
+        }
+    });
+
+    // Обработчик кнопки выхода
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('adminSection').classList.add('hidden');
+        clearLoginFields();
+    });
+
+    function clearLinkFormFields() {
+        document.getElementById('urlInput').value = '';
+        document.getElementById('buttonTextInput').value = '';
+    }
+
+    // Закрываем dropdown при клике вне его
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.role-dropdown') && !e.target.closest('.edit-btn')) {
+            document.querySelectorAll('.role-dropdown').forEach(d => d.classList.remove('active'));
+        }
+    });
+
+    // Проверка авторизации при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        if (token && (role === 'admin' || role === 'editor')) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.remove('hidden');
+            loadCurrentUserProfile();
+            loadLinks();
+            loadUsers();
+        } else {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+        }
+    });
+    </script>
+</body>
+</html>
+    

@@ -1,0 +1,163 @@
+services:
+  # База данных PostgreSQL
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${DB_USER:-CYS}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-Link}
+      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./db/ssl:/etc/ssl/postgresql
+      - ./db/backups:/backups
+      - ./db/init-scripts:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-CYS} -d ${DB_NAME:-Link}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+
+  # Node.js приложение
+  node:
+    build:
+      context: .
+      dockerfile: backend/node-app/src/Dockerfile
+    command: node server.js
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgres://${DB_USER:-CYS}:${DB_PASSWORD}@db:5432/${DB_NAME:-Link}?sslmode=disable"
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    volumes:
+      - ./db/ssl:/etc/ssl/postgresql:ro
+      - ./backend/node-app/src/certs:/usr/src/app/certs
+      - ./backend/node-app/src/uploads:/usr/src/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+
+  # Nginx
+  nginx:
+    build:
+      context: .
+      dockerfile: frontend/nginx/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./logs/nginx:/var/log/nginx
+      - ./frontend/nginx/ssl:/etc/nginx/ssl
+      - ./backend/node-app/src/uploads:/usr/share/nginx/html/uploads
+      - ./frontend/react-app/dist:/usr/share/nginx/html
+    depends_on:
+      - node
+      - react
+    networks:
+      - frontend
+      - backend
+  # React
+  react:
+    build:
+      context: .
+      dockerfile: frontend/react-app/Dockerfile
+    environment:
+      - REACT_APP_API_URL=/api # Или полный URL для production
+    networks:
+      - frontend
+    depends_on:
+      - node
+
+  # PHP-FPM
+#  php:
+#    build:
+#      context: .
+#      dockerfile: php-fpm/Dockerfile
+#    volumes:
+#      - ./frontend/html:/usr/share/nginx/html
+#    environment:
+#      PHP_FPM_MAX_CHILDREN: 20
+#      PHP_FPM_START_SERVERS: 4
+#    networks:
+#      - backend
+#      - frontend
+
+  # Redis
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./backend/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis_data:/data
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass ${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # React
+#  react:
+#    build:
+#      context: ./frontend/react-app
+#      dockerfile: Dockerfile
+#    ports:
+#      - "3001:80"
+#    volumes:
+#      - ./frontend/react-app/src/:/app/src
+#      - ./frontend/html:/app/dist
+#      - ./backend/node-app/src/uploads:/usr/share/nginx/html/uploads
+#    networks:
+#      - frontend
+#   depends_on:
+#      - node
+
+  # Сервис бэкапов
+  db-backup:
+    image: postgres:latest
+    volumes:
+      - ./db/backups:/backups
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      PGUSER: ${DB_USER:-CYS}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGHOST: db
+      PGDATABASE: ${DB_NAME:-Link}
+    command: >
+      sh -c 'while true; do
+        pg_dump -Fc -f /backups/db_backup_$$(date +%Y-%m-%d_%H-%M-%S).dump
+        sleep 86400
+      done'
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+  redis_data:
+
+networks:
+  backend:
+    internal: true
+  frontend:

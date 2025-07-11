@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Daily Report</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Стили для отчета */
+        .report-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .summary-card {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .summary-card h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .task-link {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .task-link:hover {
+            text-decoration: underline;
+        }
+        .status-done {
+            color: #27ae60;
+        }
+        .status-inprogress {
+            color: #f39c12;
+        }
+        .status-todo {
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <a href="/" class="logo">MyApp</a>
+            <nav class="main-nav">
+                <a href="/profile">Профиль</a>
+                <a href="/jira-report" class="active">Jira Отчет</a>
+                <a href="/articles">Статьи</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="profile-container" id="profile-avatar-container">
+                <img id="userAvatar" src="/images/default-avatar.png" alt="Аватар" class="avatar">
+                <div class="profile-dropdown">
+                    <div id="userName">Загрузка...</div>
+                    <a href="/profile" id="profileLink">Мой профиль</a>
+                    <a href="/settings">Настройки</a>
+                    <button id="logoutButton">Выйти</button>
+                    <div id="adminButton" style="display: none;">
+                        <a href="/admin">Админ панель</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="report-container" id="reportContainer">
+            <div class="loading-spinner">Загрузка отчета...</div>
+        </div>
+    </main>
+
+    <script>
+        // Функция экранирования HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Проверка наличия токена
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+
+        // Загрузка информации о пользователе
+        async function fetchUserInfo() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('token');
+                        window.location.href = 'login.html';
+                    }
+                    throw new Error(`Ошибка получения данных: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.name) {
+                    document.getElementById('userName').textContent = data.name;
+                    
+                    const avatar = document.getElementById('userAvatar');
+                    if (data.profile_image) {
+                        avatar.src = `/uploads/${data.profile_image}?t=${Date.now()}`;
+                        avatar.onerror = () => {
+                            avatar.src = '/images/default-avatar.png';
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки данных пользователя:', error);
+            }
+        }
+
+        // Проверка прав администратора
+        async function checkAdminRights() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const response = await fetch('/api/users/me/admin-button', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Ошибка проверки прав');
+
+                const data = await response.json();
+                if (data.showAdminButton) {
+                    document.getElementById('adminButton').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка проверки прав администратора:', error);
+            }
+        }
+
+        // Загрузка и отображение Jira отчета
+        async function loadJiraReport() {
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = '<div class="loading-spinner">Загрузка отчета...</div>';
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/jira/report-data', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(response.status === 404 
+                        ? 'Отчет не найден' 
+                        : 'Ошибка загрузки отчета');
+                }
+
+                const report = await response.json();
+                renderReport(report);
+            } catch (error) {
+                console.error('Ошибка загрузки Jira отчета:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        <h3>Ошибка загрузки отчета</h3>
+                        <p>${escapeHtml(error.message)}</p>
+                        <button onclick="loadJiraReport()">Попробовать снова</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Отображение отчета
+        function renderReport(report) {
+            const container = document.getElementById('reportContainer');
+            
+            if (!report || !report.tasks) {
+                container.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+                return;
+            }
+
+            let html = `
+                <div class="report-header">
+                    <h2>Ежедневный отчет Jira</h2>
+                    <div class="report-period">${escapeHtml(report.period)}</div>
+                </div>
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <h3>Всего задач</h3>
+                        <div class="value">${report.totalTasks}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Выполнено</h3>
+                        <div class="value">${report.completedTasks}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Осталось</h3>
+                        <div class="value">${report.remainingTasks}</div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Затрачено времени</h3>
+                        <div class="value">${escapeHtml(report.totalSpent)}</div>
+                    </div>
+                </div>
+                <h3>Список задач</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Задача</th>
+                            <th>Статус</th>
+                            <th>Затрачено</th>
+                            <th>Исполнитель</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            report.tasks.forEach(task => {
+                const statusClass = task.statusCategory === 'done' ? 'status-done' : 
+                                  task.statusCategory === 'indeterminate' ? 'status-inprogress' : 'status-todo';
+                
+                html += `
+                    <tr>
+                        <td>
+                            <a href="${escapeHtml(task.url)}" class="task-link" target="_blank">
+                                ${escapeHtml(task.key)}: ${escapeHtml(task.summary)}
+                            </a>
+                        </td>
+                        <td class="${statusClass}">${escapeHtml(task.status)}</td>
+                        <td>${escapeHtml(task.spent)}</td>
+                        <td>${escapeHtml(task.assignee)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        // Выход из системы
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        // Обработчики событий
+        document.getElementById('profile-avatar-container')?.addEventListener('click', function() {
+            const dropdown = document.querySelector('.profile-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // Закрытие выпадающего меню при клике вне его
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.profile-container')) {
+                document.querySelector('.profile-dropdown').style.display = 'none';
+            }
+        });
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserInfo();
+            checkAdminRights();
+            loadJiraReport();
+        });
+    </script>
+</body>
+</html>

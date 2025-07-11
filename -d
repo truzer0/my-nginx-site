@@ -1,0 +1,9 @@
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>nginx/1.29.0</center>
+</body>
+</html>
+--_curl_--"r.gishlakaev":"test"
+--_curl_--"password":"Truzer03212"
