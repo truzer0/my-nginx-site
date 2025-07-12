@@ -3,7 +3,7 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 COPY ./frontend/react-app/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY ./frontend/react-app/ .
 RUN npm run build
 
