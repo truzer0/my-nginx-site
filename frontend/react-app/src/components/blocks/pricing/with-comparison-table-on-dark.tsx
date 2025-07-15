@@ -1,12 +1,35 @@
 import { Fragment } from 'react'
 import { CheckIcon, MinusIcon } from '@heroicons/react/20/solid'
 
-const tiers = [
+// Определяем типы
+type TierName = 'Starter' | 'Growth' | 'Scale'
+type TierValue = boolean | string
+
+interface Feature {
+  name: string
+  tiers: Record<TierName, TierValue>
+}
+
+interface Section {
+  name: string
+  features: Feature[]
+}
+
+interface Tier {
+  name: TierName
+  id: string
+  href: string
+  priceMonthly: string
+  mostPopular: boolean
+}
+
+const tiers: Tier[] = [
   { name: 'Starter', id: 'tier-starter', href: '#', priceMonthly: '$19', mostPopular: false },
   { name: 'Growth', id: 'tier-growth', href: '#', priceMonthly: '$49', mostPopular: true },
   { name: 'Scale', id: 'tier-scale', href: '#', priceMonthly: '$99', mostPopular: false },
 ]
-const sections = [
+
+const sections: Section[] = [
   {
     name: 'Features',
     features: [
@@ -36,7 +59,8 @@ const sections = [
   },
 ]
 
-function classNames(...classes) {
+// Исправленная функция с типизацией
+function classNames(...classes: Array<string | boolean | undefined | null>): string {
   return classes.filter(Boolean).join(' ')
 }
 
@@ -51,7 +75,7 @@ export default function WithComparisonTableOnDark() {
           </p>
         </div>
         <p className="mx-auto mt-6 max-w-2xl text-center text-lg font-medium text-pretty text-gray-400 sm:text-xl/8">
-          Choose an affordable plan that’s packed with the best features for engaging your audience, creating customer
+          Choose an affordable plan that's packed with the best features for engaging your audience, creating customer
           loyalty, and driving sales.
         </p>
 

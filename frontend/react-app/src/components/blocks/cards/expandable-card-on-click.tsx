@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useEffect, useRef, useState, RefObject } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
 export function ExpandableCardOnClick() {
   const items = [
     {
@@ -53,17 +54,13 @@ export function ExpandableCardOnClick() {
       ),
     },
   ];
+
   const [active, setActive] = useState<null | (typeof items)[number]>(null);
-
   const ref = useRef<HTMLDivElement>(null);
-  
-  useOutsideClick(ref as RefObject<HTMLDivElement>, () => {
+
+  useOutsideClick(ref, () => {
     setActive(null);
-    });
-
-
-
-
+  });
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -169,17 +166,17 @@ export function ExpandableCardOnClick() {
   );
 }
 
+// Исправленный хук useOutsideClick
 export const useOutsideClick = (
-  ref: React.RefObject<HTMLDivElement>,
-  callback: Function
+  ref: RefObject<HTMLElement | null>,
+  callback: () => void
 ) => {
   useEffect(() => {
-    const listener = (event: any) => {
-      // DO NOTHING if the element being clicked is the target element or their children
-      if (!ref.current || ref.current.contains(event.target)) {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) {
         return;
       }
-      callback(event);
+      callback();
     };
 
     document.addEventListener("mousedown", listener);

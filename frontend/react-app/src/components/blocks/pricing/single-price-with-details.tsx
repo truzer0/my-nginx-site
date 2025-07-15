@@ -1,4 +1,4 @@
-mport { CheckIcon } from '@heroicons/react/20/solid'
+import { CheckIcon } from '@heroicons/react/20/solid'
 
 const includedFeatures = [
   'Private forum access',

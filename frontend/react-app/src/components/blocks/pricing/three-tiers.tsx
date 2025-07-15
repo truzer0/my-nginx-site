@@ -42,7 +42,8 @@ const tiers = [
   },
 ]
 
-function classNames(...classes) {
+// Исправленная функция с типизацией
+function classNames(...classes: Array<string | boolean | undefined | null>): string {
   return classes.filter(Boolean).join(' ')
 }
 
@@ -57,7 +58,7 @@ export default function ThreeTiers() {
           </p>
         </div>
         <p className="mx-auto mt-6 max-w-2xl text-center text-lg font-medium text-pretty text-gray-600 sm:text-xl/8">
-          Choose an affordable plan that’s packed with the best features for engaging your audience, creating customer
+          Choose an affordable plan that's packed with the best features for engaging your audience, creating customer
           loyalty, and driving sales.
         </p>
         <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">

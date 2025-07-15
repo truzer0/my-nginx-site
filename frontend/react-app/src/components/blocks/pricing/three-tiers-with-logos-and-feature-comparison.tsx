@@ -1,8 +1,33 @@
-import { Fragment } from 'react'
-import { CheckIcon, MinusIcon, PlusIcon } from '@heroicons/react/16/solid'
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react'
+import { Fragment } from 'react';
+import { CheckIcon, MinusIcon, PlusIcon } from '@heroicons/react/16/solid';
+import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 
-const tiers = [
+// Определяем типы для тарифов
+type TierName = 'Starter' | 'Growth' | 'Scale';
+type TierValue = boolean | string;
+
+interface Feature {
+  name: string;
+  tiers: Record<TierName, TierValue>;
+}
+
+interface Section {
+  name: string;
+  features: Feature[];
+}
+
+interface Tier {
+  name: TierName;
+  description: string;
+  priceMonthly: string;
+  href: string;
+  highlights: {
+    description: string;
+    disabled?: boolean;
+  }[];
+}
+
+const tiers: Tier[] = [
   {
     name: 'Starter',
     description: 'Everything you need to get started.',
@@ -45,8 +70,9 @@ const tiers = [
       { description: 'Priority phone support' },
     ],
   },
-]
-const sections = [
+];
+
+const sections: Section[] = [
   {
     name: 'Features',
     features: [
@@ -74,7 +100,7 @@ const sections = [
       { name: '1:1 onboarding tour', tiers: { Starter: false, Growth: false, Scale: true } },
     ],
   },
-]
+];
 
 export default function ThreeTiersWithLogosAndFeatureComparison() {
   return (
@@ -228,7 +254,9 @@ export default function ThreeTiersWithLogosAndFeatureComparison() {
                       {typeof feature.tiers[tier.name] === 'string' ? (
                         <>
                           <span className="sr-only">{tier.name} includes:</span>
-                          <span className="text-sm/6 text-gray-950">{feature.tiers[tier.name]}</span>
+                          <span className="text-sm/6 text-gray-950">
+                            {feature.tiers[tier.name] as string}
+                          </span>
                         </>
                       ) : (
                         <>
@@ -237,7 +265,6 @@ export default function ThreeTiersWithLogosAndFeatureComparison() {
                           ) : (
                             <MinusIcon aria-hidden="true" className="inline-block size-4 fill-gray-400" />
                           )}
-
                           <span className="sr-only">
                             {feature.tiers[tier.name] === true
                               ? `Included in ${tier.name}`
@@ -286,7 +313,9 @@ export default function ThreeTiersWithLogosAndFeatureComparison() {
                           <dt className="text-sm/6 font-normal text-gray-600">{feature.name}</dt>
                           <dd className="text-center">
                             {typeof feature.tiers[tier.name] === 'string' ? (
-                              <span className="text-sm/6 text-gray-950">{feature.tiers[tier.name]}</span>
+                              <span className="text-sm/6 text-gray-950">
+                                {feature.tiers[tier.name] as string}
+                              </span>
                             ) : (
                               <>
                                 {feature.tiers[tier.name] === true ? (
@@ -294,8 +323,9 @@ export default function ThreeTiersWithLogosAndFeatureComparison() {
                                 ) : (
                                   <MinusIcon aria-hidden="true" className="inline-block size-4 fill-gray-400" />
                                 )}
-
-                                <span className="sr-only">{feature.tiers[tier.name] === true ? 'Yes' : 'No'}</span>
+                                <span className="sr-only">
+                                  {feature.tiers[tier.name] === true ? 'Yes' : 'No'}
+                                </span>
                               </>
                             )}
                           </dd>
@@ -310,5 +340,5 @@ export default function ThreeTiersWithLogosAndFeatureComparison() {
         </TabGroup>
       </div>
     </div>
-  )
+  );
 }

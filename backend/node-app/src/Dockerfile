@@ -3,8 +3,9 @@ FROM node:18
 # Устанавливаем рабочую директорию
 WORKDIR /usr/src/app
 
+COPY ./backend/node-app/src/package.json /usr/src/app/
 # Копируем package.json и устанавливаем зависимости
-COPY package*.json ./
+#COPY package*.json ./
 
 # Установите зависимости приложения
 RUN npm install

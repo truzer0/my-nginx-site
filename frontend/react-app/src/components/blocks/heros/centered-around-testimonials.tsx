@@ -1,19 +1,78 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { useMotionValueEvent, useScroll } from "motion/react";
+import { useMotionValueEvent, useScroll } from "framer-motion";
 import { Outfit } from "next/font/google";
 import Image from "next/image";
 import React, { useRef, useState } from "react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 const outfit = Outfit({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
+interface Testimonial {
+  src: string;
+  quote: string;
+  name: string;
+  designation?: string;
+  rotate?: number;
+}
+
+export const testimonials: Testimonial[] = [
+  {
+    name: "Manu Arora",
+    quote: "Fantastic AI, highly recommend it.",
+    src: "https://i.pravatar.cc/150?img=1",
+    designation: "Tech Innovator & Entrepreneur",
+    rotate: -20,
+  },
+  {
+    name: "Tyler Durden",
+    quote: "AI revolutionized my business model.",
+    src: "https://i.pravatar.cc/150?img=2",
+    designation: "Creative Director & Business Owner",
+    rotate: -10,
+  },
+  {
+    name: "Alice Johnson",
+    quote: "Transformed the way I work!",
+    src: "https://i.pravatar.cc/150?img=3",
+    designation: "Senior Software Engineer",
+    rotate: 20,
+  },
+  {
+    name: "Bob Smith",
+    quote: "Absolutely revolutionary, a game-changer.",
+    src: "https://i.pravatar.cc/150?img=4",
+    designation: "Industry Analyst",
+    rotate: -10,
+  },
+  {
+    name: "Cathy Lee",
+    quote: "Improved my work efficiency and daily life.",
+    src: "https://i.pravatar.cc/150?img=5",
+    designation: "Product Manager",
+    rotate: 10,
+  },
+  {
+    name: "David Wright",
+    quote: "It's like having a superpower!",
+    src: "https://i.pravatar.cc/150?img=6",
+    designation: "Research Scientist",
+    rotate: 20,
+  },
+];
+
+const defaultTestimonial: Testimonial = {
+  src: "https://i.pravatar.cc/150?img=7",
+  name: "Anonymous",
+  quote: "Great product!",
+  rotate: 0
+};
+
 export function CenteredAroundTestimonials() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
@@ -73,35 +132,36 @@ export function CenteredAroundTestimonials() {
       </motion.div>
     );
   };
+
   return (
     <div ref={containerRef} className="relative w-full overflow-hidden">
       <TestimonialCard
-        testimonial={testimonials[0]}
+        testimonial={testimonials[0] ?? defaultTestimonial}
         className="-left-10 top-20"
         direction="left"
       />
       <TestimonialCard
-        testimonial={testimonials[1]}
+        testimonial={testimonials[1] ?? defaultTestimonial}
         className="-left-10 top-1/2 -translate-y-1/2"
         direction="left"
       />
       <TestimonialCard
-        testimonial={testimonials[2]}
+        testimonial={testimonials[2] ?? defaultTestimonial}
         className="-right-10 top-20"
         direction="right"
       />
       <TestimonialCard
-        testimonial={testimonials[3]}
+        testimonial={testimonials[3] ?? defaultTestimonial}
         className="-left-10 bottom-20"
         direction="left"
       />
       <TestimonialCard
-        testimonial={testimonials[4]}
+        testimonial={testimonials[4] ?? defaultTestimonial}
         className="-right-10 bottom-1/2 -translate-y-1/2"
         direction="right"
       />
       <TestimonialCard
-        testimonial={testimonials[5]}
+        testimonial={testimonials[5] ?? defaultTestimonial}
         className="-right-10 bottom-20"
         direction="right"
       />
@@ -137,56 +197,3 @@ export function CenteredAroundTestimonials() {
     </div>
   );
 }
-
-interface Testimonial {
-  src: string;
-  quote: string;
-  name: string;
-  designation?: string;
-  rotate?: number;
-}
-
-export const testimonials: Testimonial[] = [
-  {
-    name: "Manu Arora",
-    quote: "Fantastic AI, highly recommend it.",
-    src: "https://i.pravatar.cc/150?img=1",
-    designation: "Tech Innovator & Entrepreneur",
-    rotate: -20,
-  },
-  {
-    name: "Tyler Durden",
-    quote: "AI revolutionized my business model.",
-    src: "https://i.pravatar.cc/150?img=2",
-    designation: "Creative Director & Business Owner",
-    rotate: -10,
-  },
-  {
-    name: "Alice Johnson",
-    quote: "Transformed the way I work!",
-    src: "https://i.pravatar.cc/150?img=3",
-    designation: "Senior Software Engineer",
-    rotate: 20,
-  },
-  {
-    name: "Bob Smith",
-    quote: "Absolutely revolutionary, a game-changer.",
-    src: "https://i.pravatar.cc/150?img=4",
-    designation: "Industry Analyst",
-    rotate: -10,
-  },
-  {
-    name: "Cathy Lee",
-    quote: "Improved my work efficiency and daily life.",
-    src: "https://i.pravatar.cc/150?img=5",
-    designation: "Product Manager",
-    rotate: 10,
-  },
-  {
-    name: "David Wright",
-    quote: "It's like having a superpower!",
-    src: "https://i.pravatar.cc/150?img=6",
-    designation: "Research Scientist",
-    rotate: 20,
-  },
-];

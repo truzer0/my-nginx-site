@@ -1,20 +1,20 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { AnimationProps, motion } from "motion/react";
+import { motion } from "framer-motion";
+import type { MotionProps } from "framer-motion";
 import React from "react";
 
-export function TextAnimationBlurFadeInDemo() {
+export function TextAnimationTypewriterEffectDemo() {
   return (
     <div className="mx-auto max-w-4xl p-4">
       <Text className="mb-4 text-center text-2xl font-bold tracking-tight md:text-7xl">
-        Animations that stand out from the rest.
+        Typewriter effect for engaging content.
       </Text>
       <Text
         className="mx-auto max-w-2xl text-center text-xl font-normal text-neutral-600 dark:text-neutral-600"
         delay={0.2}
       >
-        Appearing text sets aside the text from the rest, it is a great way to
-        make the text more engaging and interesting.
+        This animation mimics the classic typewriter effect, revealing text one character at a time.
       </Text>
 
       <div className="mt-8 flex flex-col justify-center gap-4 md:flex-row">
@@ -48,32 +48,26 @@ const Text = ({
   children: string;
   className?: string;
   delay?: number;
-} & AnimationProps) => {
+} & MotionProps) => {
   return (
     <motion.p
       {...animationProps}
       className={cn("text-4xl font-medium", className)}
     >
-      {children.split(" ").map((word, index) => (
+      {children.split("").map((char, index) => (
         <motion.span
-          key={`word-${index}-${word}`}
-          initial={{
-            opacity: 0,
-            filter: "blur(10px)",
-            y: 10,
-          }}
+          key={`char-${index}-${char}`}
+          initial={{ opacity: 0 }}
           whileInView={{
             opacity: 1,
-            filter: "blur(0px)",
-            y: 0,
           }}
           transition={{
-            duration: 0.2,
-            delay: delay + index * 0.02,
+            duration: 0.05,
+            delay: delay + index * 0.03,
           }}
           className="inline-block"
         >
-          {word}&nbsp;
+          {char === " " ? "\u00A0" : char}
         </motion.span>
       ))}
     </motion.p>

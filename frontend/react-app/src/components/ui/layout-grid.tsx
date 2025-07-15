@@ -1,112 +1,77 @@
 "use client";
 import React, { useState } from "react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-type Card = {
+interface Card {
   id: number;
-  content: JSX.Element | React.ReactNode | string;
+  content: React.ReactNode;
   className: string;
   thumbnail: string;
-};
+}
 
-export const LayoutGrid = ({ cards }: { cards: Card[] }) => {
+interface LayoutGridProps {
+  cards: Card[];
+}
+
+export const LayoutGrid = ({ cards }: LayoutGridProps) => {
   const [selected, setSelected] = useState<Card | null>(null);
-  const [lastSelected, setLastSelected] = useState<Card | null>(null);
 
-  const handleClick = (card: Card) => {
-    setLastSelected(selected);
-    setSelected(card);
+  const handleCardClick = (card: Card) => {
+    setSelected(selected?.id === card.id ? null : card);
   };
 
-  const handleOutsideClick = () => {
-    setLastSelected(selected);
+  const handleBackgroundClick = () => {
     setSelected(null);
   };
 
   return (
-    <div className="w-full h-full p-10 grid grid-cols-1 md:grid-cols-3  max-w-7xl mx-auto gap-4 relative">
-      {cards.map((card, i) => (
-        <div key={i} className={cn(card.className, "")}>
-          <motion.div
-            onClick={() => handleClick(card)}
-            className={cn(
-              card.className,
-              "relative overflow-hidden",
-              selected?.id === card.id
-                ? "rounded-lg cursor-pointer absolute inset-0 h-1/2 w-full md:w-1/2 m-auto z-50 flex justify-center items-center flex-wrap flex-col"
-                : lastSelected?.id === card.id
-                ? "z-40 bg-white rounded-xl h-full w-full"
-                : "bg-white rounded-xl h-full w-full"
-            )}
-            layoutId={`card-${card.id}`}
-          >
-            {selected?.id === card.id && <SelectedCard selected={selected} />}
-            <ImageComponent card={card} />
-          </motion.div>
-        </div>
+    <div className="w-full h-full p-10 grid grid-cols-1 md:grid-cols-3 max-w-7xl mx-auto gap-4 relative">
+      {cards.map((card) => (
+        <motion.div
+          key={card.id}
+          onClick={() => handleCardClick(card)}
+          className={cn(
+            card.className,
+            "relative overflow-hidden bg-white rounded-xl h-full w-full cursor-pointer",
+            selected?.id === card.id && "fixed inset-0 m-auto z-50 h-1/2 w-full md:w-1/2"
+          )}
+          layoutId={`card-${card.id}`}
+        >
+          <motion.img
+            src={card.thumbnail}
+            alt="Thumbnail"
+            className="absolute inset-0 h-full w-full object-cover object-top"
+            layoutId={`image-${card.id}`}
+          />
+          
+          {selected?.id === card.id && (
+            <motion.div 
+              className="absolute inset-0 bg-black/60 z-10 flex items-end p-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="relative z-20"
+              >
+                {card.content}
+              </motion.div>
+            </motion.div>
+          )}
+        </motion.div>
       ))}
-      <motion.div
-        onClick={handleOutsideClick}
-        className={cn(
-          "absolute h-full w-full left-0 top-0 bg-black opacity-0 z-10",
-          selected?.id ? "pointer-events-auto" : "pointer-events-none"
-        )}
-        animate={{ opacity: selected?.id ? 0.3 : 0 }}
-      />
-    </div>
-  );
-};
 
-const ImageComponent = ({ card }: { card: Card }) => {
-  return (
-    <motion.img
-      layoutId={`image-${card.id}-image`}
-      src={card.thumbnail}
-      height="500"
-      width="500"
-      className={cn(
-        "object-cover object-top absolute inset-0 h-full w-full transition duration-200"
+      {selected && (
+        <motion.div
+          onClick={handleBackgroundClick}
+          className="fixed inset-0 bg-black/30 z-40 cursor-pointer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        />
       )}
-      alt="thumbnail"
-    />
-  );
-};
-
-const SelectedCard = ({ selected }: { selected: Card | null }) => {
-  return (
-    <div className="bg-transparent h-full w-full flex flex-col justify-end rounded-lg shadow-2xl relative z-[60]">
-      <motion.div
-        initial={{
-          opacity: 0,
-        }}
-        animate={{
-          opacity: 0.6,
-        }}
-        className="absolute inset-0 h-full w-full bg-black opacity-60 z-10"
-      />
-      <motion.div
-        layoutId={`content-${selected?.id}`}
-        initial={{
-          opacity: 0,
-          y: 100,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
-        exit={{
-          opacity: 0,
-          y: 100,
-        }}
-        transition={{
-          duration: 0.3,
-          ease: "easeInOut",
-        }}
-        className="relative px-8 pb-4 z-[70]"
-      >
-        {selected?.content}
-      </motion.div>
     </div>
   );
 };

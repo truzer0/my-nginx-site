@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { IconChevronDown, IconMenu2, IconX } from "@tabler/icons-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -49,7 +49,20 @@ const Navbar = () => {
   );
 };
 
-const DesktopNav = ({ navItems }: any) => {
+interface NavItem {
+  name: string;
+  link: string;
+  children?: Array<{
+    name: string;
+    link: string;
+  }>;
+}
+
+interface DesktopNavProps {
+  navItems: NavItem[];
+}
+
+const DesktopNav = ({ navItems }: DesktopNavProps) => {
   const [active, setActive] = useState<string | null>(null);
   return (
     <motion.div
@@ -102,7 +115,11 @@ const DesktopNav = ({ navItems }: any) => {
   );
 };
 
-const MobileNav = ({ navItems }: any) => {
+interface MobileNavProps {
+  navItems: NavItem[];
+}
+
+const MobileNav = ({ navItems }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -135,7 +152,7 @@ const MobileNav = ({ navItems }: any) => {
               exit={{ opacity: 0 }}
               className="absolute inset-x-0 top-16 z-20 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-white px-4 py-8 dark:bg-neutral-950"
             >
-              {navItems.map((navItem: any, idx: number) => (
+              {navItems.map((navItem, idx) => (
                 <div key={`navItem-${idx}`} className="w-full">
                   {navItem.children ? (
                     <MobileChildNavItems navItem={navItem} />
@@ -162,7 +179,11 @@ const MobileNav = ({ navItems }: any) => {
   );
 };
 
-const MobileChildNavItems = ({ navItem }: { navItem: any }) => {
+interface MobileChildNavItemsProps {
+  navItem: NavItem;
+}
+
+const MobileChildNavItems = ({ navItem }: MobileChildNavItemsProps) => {
   const [open, setOpen] = useState(false);
   return (
     <motion.div className="overflow-hidden">
@@ -181,7 +202,7 @@ const MobileChildNavItems = ({ navItem }: { navItem: any }) => {
             exit={{ height: 0 }}
             className="pl-4"
           >
-            {navItem.children.map((child: any, childIdx: number) => (
+            {navItem.children?.map((child, childIdx) => (
               <Link
                 key={`child-${childIdx}`}
                 href={child.link}
@@ -215,7 +236,7 @@ const Logo = () => {
 };
 
 const transition = {
-  type: "spring",
+  type: "spring" as const,
   mass: 0.5,
   damping: 11.5,
   stiffness: 100,
@@ -223,17 +244,19 @@ const transition = {
   restSpeed: 0.001,
 };
 
+interface MenuItemProps {
+  setActive: (item: string) => void;
+  active: string | null;
+  item: string;
+  children?: React.ReactNode;
+}
+
 export const MenuItem = ({
   setActive,
   active,
   item,
   children,
-}: {
-  setActive: (item: string) => void;
-  active: string | null;
-  item: string;
-  children?: React.ReactNode;
-}) => {
+}: MenuItemProps) => {
   return (
     <div onMouseEnter={() => setActive(item)} className="relative">
       <motion.p
@@ -253,11 +276,11 @@ export const MenuItem = ({
               <div className="">
                 <motion.div
                   transition={transition}
-                  layoutId="active" // layoutId ensures smooth animation
+                  layoutId="active"
                   className="mt-4 overflow-hidden rounded-2xl bg-white shadow-xl backdrop-blur-sm dark:bg-neutral-950"
                 >
                   <motion.div
-                    layout // layout ensures smooth animation
+                    layout
                     className="h-full w-max p-4"
                   >
                     {children}
@@ -272,16 +295,15 @@ export const MenuItem = ({
   );
 };
 
-export const Menu = ({
-  setActive,
-  children,
-}: {
+interface MenuProps {
   setActive: (item: string | null) => void;
   children: React.ReactNode;
-}) => {
+}
+
+export const Menu = ({ setActive, children }: MenuProps) => {
   return (
     <nav
-      onMouseLeave={() => setActive(null)} // resets the state
+      onMouseLeave={() => setActive(null)}
       className="relative flex justify-center space-x-4 rounded-full bg-white px-4 py-3 dark:bg-neutral-950"
     >
       {children}
@@ -289,17 +311,19 @@ export const Menu = ({
   );
 };
 
+interface ProductItemProps {
+  title: string;
+  description: string;
+  href: string;
+  src: string;
+}
+
 export const ProductItem = ({
   title,
   description,
   href,
   src,
-}: {
-  title: string;
-  description: string;
-  href: string;
-  src: string;
-}) => {
+}: ProductItemProps) => {
   return (
     <Link href={href} className="flex gap-4">
       <Image
@@ -321,7 +345,11 @@ export const ProductItem = ({
   );
 };
 
-export const HoveredLink = ({ children, ...rest }: any) => {
+interface HoveredLinkProps extends React.ComponentProps<typeof Link> {
+  children: React.ReactNode;
+}
+
+export const HoveredLink = ({ children, ...rest }: HoveredLinkProps) => {
   return (
     <Link
       {...rest}

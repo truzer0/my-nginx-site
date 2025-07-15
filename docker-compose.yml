@@ -67,35 +67,27 @@ services:
       - ./frontend/react-app/dist:/usr/share/nginx/html
     depends_on:
       - node
-      - react
+      - next
     networks:
       - frontend
       - backend
-  # React
-  react:
+
+  # Next.js
+  next:
     build:
       context: .
       dockerfile: frontend/react-app/Dockerfile
     environment:
-      - REACT_APP_API_URL=/api # Или полный URL для production
+      NEXT_PUBLIC_API_URL: /api
+      NODE_ENV: production
+    ports:
+      - "5000:5000"
+    volumes:
+      - /var/nextjs/.next/cache:/app/.next/cache
+      - ./frontend/react-app/public:/app/public
     networks:
       - frontend
-    depends_on:
-      - node
-
-  # PHP-FPM
-#  php:
-#    build:
-#      context: .
-#      dockerfile: php-fpm/Dockerfile
-#    volumes:
-#      - ./frontend/html:/usr/share/nginx/html
-#    environment:
-#      PHP_FPM_MAX_CHILDREN: 20
-#      PHP_FPM_START_SERVERS: 4
-#    networks:
-#      - backend
-#      - frontend
+    restart: unless-stopped
 
   # Redis
   redis:
@@ -113,22 +105,6 @@ services:
       retries: 5
     networks:
       - backend
-
-  # React
-#  react:
-#    build:
-#      context: ./frontend/react-app
-#      dockerfile: Dockerfile
-#    ports:
-#      - "3001:80"
-#    volumes:
-#      - ./frontend/react-app/src/:/app/src
-#      - ./frontend/html:/app/dist
-#      - ./backend/node-app/src/uploads:/usr/share/nginx/html/uploads
-#    networks:
-#      - frontend
-#   depends_on:
-#      - node
 
   # Сервис бэкапов
   db-backup:

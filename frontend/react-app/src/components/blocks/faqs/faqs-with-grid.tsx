@@ -58,15 +58,17 @@ const FAQs = [
       "You can leave a review for a product by logging into your account, navigating to the product page, and clicking on the 'Write a Review' button. Share your experience to help others make informed decisions.",
   },
 ];
+
 export function FAQsWithGrid() {
   const columns = 3;
-  const faqsGrid: { question: string; answer: string }[][] = Array.from(
-    { length: columns },
-    () => []
-  );
+  const faqsGrid: Array<Array<{ question: string; answer: string }>> = Array(columns)
+    .fill(null)
+    .map(() => []);
+
   FAQs.forEach((faq, index) => {
-    faqsGrid[index % columns].push(faq);
+    faqsGrid[index % columns]?.push(faq);
   });
+
   return (
     <div className="mx-auto grid max-w-7xl gap-4 px-4 py-20 md:px-8 md:py-40">
       <h2 className="text-left text-4xl font-medium tracking-tight text-neutral-600 dark:text-neutral-50 md:text-5xl">

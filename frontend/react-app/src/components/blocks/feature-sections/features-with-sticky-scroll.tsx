@@ -5,7 +5,7 @@ import {
   useScroll,
   useTransform,
   useMotionValueEvent,
-} from "motion/react";
+} from "framer-motion";
 import { IconRocket } from "@tabler/icons-react";
 import Image from "next/image";
 
@@ -88,8 +88,9 @@ export function FeaturesWithStickyScroll() {
     );
     const closestBreakpointIndex = cardsBreakpoints.reduce(
       (acc, breakpoint, index) => {
+        const currentBreakpoint = cardsBreakpoints[acc] ?? 0;
         const distance = Math.abs(latest - breakpoint);
-        if (distance < Math.abs(latest - cardsBreakpoints[acc])) {
+        if (distance < Math.abs(latest - currentBreakpoint)) {
           return index;
         }
         return acc;

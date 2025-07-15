@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { animate } from "motion/react";
+import { animate } from "framer-motion";
 
 interface GlowingEffectProps {
   blur?: number;
@@ -16,6 +16,7 @@ interface GlowingEffectProps {
   movementDuration?: number;
   borderWidth?: number;
 }
+
 const GlowingEffect = memo(
   ({
     blur = 0,
@@ -45,7 +46,8 @@ const GlowingEffect = memo(
           const element = containerRef.current;
           if (!element) return;
 
-          const { left, top, width, height } = element.getBoundingClientRect();
+          const rect = element.getBoundingClientRect();
+          const { left = 0, top = 0, width = 0, height = 0 } = rect;
           const mouseX = e?.x ?? lastPosition.current.x;
           const mouseY = e?.y ?? lastPosition.current.y;
 
@@ -53,10 +55,11 @@ const GlowingEffect = memo(
             lastPosition.current = { x: mouseX, y: mouseY };
           }
 
-          const center = [left + width * 0.5, top + height * 0.5];
+          const centerX = left + width * 0.5;
+          const centerY = top + height * 0.5;
           const distanceFromCenter = Math.hypot(
-            mouseX - center[0],
-            mouseY - center[1]
+            mouseX - centerX,
+            mouseY - centerY
           );
           const inactiveRadius = 0.5 * Math.min(width, height) * inactiveZone;
 
@@ -76,11 +79,9 @@ const GlowingEffect = memo(
           if (!isActive) return;
 
           const currentAngle =
-            parseFloat(element.style.getPropertyValue("--start")) || 0;
+            parseFloat(element.style.getPropertyValue("--start") || "0");
           let targetAngle =
-            (180 * Math.atan2(mouseY - center[1], mouseX - center[0])) /
-              Math.PI +
-            90;
+            (180 * Math.atan2(mouseY - centerY, mouseX - centerX)) / Math.PI + 90;
 
           const angleDiff = ((targetAngle - currentAngle + 180) % 360) - 180;
           const newAngle = currentAngle + angleDiff;

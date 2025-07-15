@@ -644,6 +644,46 @@ app.get('/api/user/id/:id', auth, async (req, res) => {
     }
 });
 
+// Получение всех пользователей (для админки)
+app.get('/api/admin/users', async (req, res) => {
+  if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, username, first_name as "firstName", last_name as "lastName", 
+       email, role FROM users`
+    );
+    res.json({ users: result.rows });
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Error fetching users' });
+  }
+});
+
+// Обновление роли пользователя
+app.put('/api/admin/users/:id/role', async (req, res) => {
+  if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    await pool.query(
+      'UPDATE users SET role = $1 WHERE id = $2',
+      [role, id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating role:', err);
+    res.status(500).json({ message: 'Error updating role' });
+  }
+});
+
 app.get('/api/users/search', auth, async (req, res) => {
     const { query } = req.query;
 
