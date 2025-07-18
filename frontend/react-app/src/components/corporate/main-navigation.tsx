@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "motion/react"
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,15 +50,64 @@ export default function MainNavigation({
   onNavigate,
   onLogout,
   user = {
-    name: "Sarah Johnson",
-    email: "sarah.johnson@company.com",
-    role: "Senior Manager",
-    isAdmin: true,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+    name: "Загрузка...",
+    email: "",
+    role: "",
+    isAdmin: false,
+    avatar: ""
   },
-  notificationCount = 3
+  notificationCount = 0
 }: MainNavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [userData, setUserData] = useState(user)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) return
+
+        // Загрузка профиля пользователя
+        const profileResponse = await fetch('/api/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (!profileResponse.ok) throw new Error('Ошибка загрузки профиля')
+        const profileData = await profileResponse.json()
+
+        // Проверка прав администратора
+        const adminResponse = await fetch(`/api/users/me/admin-button`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        let showAdminButton = false
+        if (adminResponse.ok) {
+          const adminData = await adminResponse.json()
+          showAdminButton = adminData.showAdminButton
+        }
+
+        setUserData({
+          name: profileData.name || "Пользователь",
+          email: profileData.email || "",
+          role: profileData.role || "",
+          isAdmin: showAdminButton,
+          avatar: profileData.profile_image ? `/uploads/${profileData.profile_image}` : 
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profileData.name || "User")}`
+        })
+
+        setIsAdmin(showAdminButton)
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error)
+      }
+    }
+
+    fetchUserData()
+  }, [])
 
   const handleNavClick = (path: string) => {
     onNavigate?.(path)
@@ -149,9 +198,9 @@ export default function MainNavigation({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2 px-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={userData.avatar} alt={userData.name} />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {user.name
+                      {userData.name
                         .split(" ")
                         .map((n) => n[0])
                         .join("")}
@@ -159,10 +208,10 @@ export default function MainNavigation({
                   </Avatar>
                   <div className="hidden lg:block text-left">
                     <div className="text-sm font-medium text-foreground font-[var(--font-inter)]">
-                      {user.name}
+                      {userData.name}
                     </div>
                     <div className="text-xs text-muted-foreground font-[var(--font-inter)]">
-                      {user.role}
+                      {userData.role}
                     </div>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -171,9 +220,9 @@ export default function MainNavigation({
               <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
                 <DropdownMenuLabel className="font-[var(--font-inter)]">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">{userData.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {userData.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -185,7 +234,7 @@ export default function MainNavigation({
                   <User className="mr-2 h-4 w-4" />
                   <span>View Profile</span>
                 </DropdownMenuItem>
-                {user.isAdmin && (
+                {isAdmin && (
                   <DropdownMenuItem 
                     className="cursor-pointer font-[var(--font-inter)]"
                     onClick={handleAdminPanel}
@@ -281,9 +330,9 @@ export default function MainNavigation({
           <div className="pt-4 pb-3 border-t border-border">
             <div className="flex items-center px-5 space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={userData.avatar} alt={userData.name} />
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {user.name
+                  {userData.name
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
@@ -291,10 +340,10 @@ export default function MainNavigation({
               </Avatar>
               <div className="space-y-1">
                 <div className="text-base font-medium text-foreground font-[var(--font-inter)]">
-                  {user.name}
+                  {userData.name}
                 </div>
                 <div className="text-sm text-muted-foreground font-[var(--font-inter)]">
-                  {user.email}
+                  {userData.email}
                 </div>
               </div>
             </div>
@@ -307,7 +356,7 @@ export default function MainNavigation({
                 <User className="mr-2 h-4 w-4" />
                 View Profile
               </Button>
-              {user.isAdmin && (
+              {isAdmin && (
                 <Button
                   variant="ghost"
                   className="w-full justify-start font-[var(--font-inter)]"

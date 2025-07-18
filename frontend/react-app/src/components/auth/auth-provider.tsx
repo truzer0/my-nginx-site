@@ -1,33 +1,28 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  login as authLogin, 
-  register as authRegister, 
-  logout as authLogout, 
-  getCurrentUser, 
-  isAuthenticated as checkIsAuthenticated,
-  getAuthToken,
-  isTokenExpired 
-} from '@/lib/auth';
-import type { User } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
-// Authentication context interface
+interface User {
+  id: string;
+  username: string;
+  role: string;
+  profile_image?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  loginWithAD: (username: string, password: string) => Promise<void>;
+  loginWithPassword: (username: string, password: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
 
-// Create the authentication context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Custom hook to use the authentication context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -36,152 +31,161 @@ export const useAuth = () => {
   return context;
 };
 
-// Provider props interface
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-// Authentication provider component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticatedState, setIsAuthenticatedState] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Clear error helper
   const clearError = () => setError(null);
 
-  // Initialize auth state from localStorage
-  const initializeAuth = async () => {
+  // Функция для безопасного декодирования JWT токена
+  const decodeJWT = (token: string) => {
     try {
-      setIsLoading(true);
+      const base64Url = token.split('.')[1];
+      if (!base64Url) throw new Error('Invalid token format');
       
-      // Check if user is authenticated using the auth library
-      const authenticated = checkIsAuthenticated();
-      
-      if (authenticated) {
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
-          setIsAuthenticatedState(true);
-        } else {
-          setUser(null);
-          setIsAuthenticatedState(false);
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = atob(base64);
+      return JSON.parse(payload);
+    } catch (error) {
+      console.error('Failed to decode JWT:', error);
+      throw new Error('Invalid token');
+    }
+  };
+
+  // Проверка аутентификации при загрузке
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+
+        if (token) {
+          // Здесь можно добавить проверку токена на сервере
+          // Пока просто проверяем наличие токена
+          setIsAuthenticated(true);
+
+          // Декодируем токен для получения информации о пользователе
+          const payload = decodeJWT(token);
+          setUser({
+            id: payload.id,
+            username: payload.username,
+            role: payload.role,
+            profile_image: payload.profile_image
+          });
         }
-      } else {
-        setUser(null);
-        setIsAuthenticatedState(false);
+      } catch (err) {
+        console.error('Auth check error:', err);
+        logout();
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to initialize auth state:', err);
-      setUser(null);
-      setIsAuthenticatedState(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  // Login function
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      setIsLoading(true);
-      clearError();
-
-      const user = await authLogin(email, password);
-      
-      // Update auth state
-      setUser(user);
-      setIsAuthenticatedState(true);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Register function
-  const register = async (name: string, email: string, password: string): Promise<void> => {
-    try {
-      setIsLoading(true);
-      clearError();
-
-      const user = await authRegister(name, email, password);
-      
-      // Update auth state
-      setUser(user);
-      setIsAuthenticatedState(true);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Logout function
-  const logout = () => {
-    try {
-      // Call auth logout utility
-      authLogout();
-      
-      // Clear auth state
-      setUser(null);
-      setIsAuthenticatedState(false);
-      clearError();
-    } catch (err) {
-      console.error('Logout error:', err);
-      // Force clear state even if logout utility fails
-      setUser(null);
-      setIsAuthenticatedState(false);
-      clearError();
-    }
-  };
-
-  // Check for token expiration periodically
-  useEffect(() => {
-    if (isAuthenticatedState) {
-      const interval = setInterval(() => {
-        if (isTokenExpired()) {
-          logout();
-        }
-      }, 60000); // Check every minute
-
-      return () => clearInterval(interval);
-    }
-  }, [isAuthenticatedState]);
-
-  // Initialize authentication state on mount
-  useEffect(() => {
-    initializeAuth();
+    checkAuth();
   }, []);
 
-  // Clear errors after successful operations
-  useEffect(() => {
-    if (isAuthenticatedState && error) {
+  // Вход через AD
+  const loginWithAD = async (username: string, password: string) => {
+    try {
+      setIsLoading(true);
       clearError();
-    }
-  }, [isAuthenticatedState, error]);
 
-  // Context value
-  const value: AuthContextType = {
-    user,
-    isAuthenticated: isAuthenticatedState,
-    isLoading,
-    error,
-    login,
-    register,
-    logout,
-    clearError,
+      const response = await fetch('/api/authorization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Ошибка авторизации через AD');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+
+      const payload = decodeJWT(data.token);
+      setUser({
+        id: payload.id,
+        username: payload.username,
+        role: payload.role,
+        profile_image: payload.profile_image
+      });
+
+      setIsAuthenticated(true);
+      router.push('/');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка авторизации';    
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Вход с паролем
+  const loginWithPassword = async (username: string, password: string) => {
+    try {
+      setIsLoading(true);
+      clearError();
+
+      const response = await fetch('/api/login-with-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Ошибка авторизации');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+
+      const payload = decodeJWT(data.token);
+      setUser({
+        id: payload.id,
+        username: payload.username,
+        role: payload.role,
+        profile_image: payload.profile_image
+      });
+
+      setIsAuthenticated(true);
+      router.push('/');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Ошибка авторизации';    
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Выход
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsAuthenticated(false);
+    clearError();
+    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      isLoading,
+      error,
+      loginWithAD,
+      loginWithPassword,
+      logout,
+      clearError
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export default AuthProvider;

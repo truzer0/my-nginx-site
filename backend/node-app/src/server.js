@@ -18,6 +18,7 @@ const https = require('https');
 const http = require('http');
 const JiraService = require('./middleware/jira-integration');
 const moment = require('moment');
+const prometheus = require('prom-client');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -371,7 +372,14 @@ app.get('/about', (req, res) => {
   res.sendFile(path.join(__dirname, 'about.html'));
 });
 
+// Метрики по умолчанию (CPU, память и т.д.)
+prometheus.collectDefaultMetrics();
 
+// Эндпоинт для Prometheus
+app.get('/api/metrics', async (req, res) => {
+  res.set('Content-Type', prometheus.register.contentType);
+  res.end(await prometheus.register.metrics());
+});
 
 app.get('/api/test-db', async (req, res) => {
   try {

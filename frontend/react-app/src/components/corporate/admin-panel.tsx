@@ -24,7 +24,9 @@ import {
   Clock,
   Shield,
   AlertTriangle,
-  Menu
+  Menu,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,150 +43,25 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
 
 interface Resource {
   id: string
-  name: string
   url: string
-  description: string
-  category: string
-  icon: string
-  usage: number
+  button_text: string
   createdAt: string
-  status: 'active' | 'inactive'
 }
 
 interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'editor' | 'viewer'
+  username: string
+  role: 'admin' | 'editor' | 'user'
   status: 'active' | 'inactive'
   lastActive: string
   joinedAt: string
-  avatar: string
-}
-
-interface AnalyticsData {
-  totalResources: number
-  totalUsers: number
-  activeUsers: number
-  totalViews: number
-  monthlyGrowth: number
-  topResources: Array<{name: string, views: number}>
-  userActivity: Array<{date: string, users: number}>
-}
-
-const mockResources: Resource[] = [
-  {
-    id: '1',
-    name: 'Company Guidelines',
-    url: '/guidelines',
-    description: 'Complete company policies and procedures',
-    category: 'Documentation',
-    icon: '📋',
-    usage: 1247,
-    createdAt: '2024-01-15',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Design System',
-    url: '/design-system',
-    description: 'UI components and brand guidelines',
-    category: 'Design',
-    icon: '🎨',
-    usage: 892,
-    createdAt: '2024-01-08',
-    status: 'active'
-  },
-  {
-    id: '3',
-    name: 'API Reference',
-    url: '/api-docs',
-    description: 'Technical documentation for developers',
-    category: 'Technical',
-    icon: '⚡',
-    usage: 634,
-    createdAt: '2024-01-20',
-    status: 'active'
-  },
-  {
-    id: '4',
-    name: 'Training Materials',
-    url: '/training',
-    description: 'Employee onboarding and training resources',
-    category: 'HR',
-    icon: '📚',
-    usage: 423,
-    createdAt: '2024-01-12',
-    status: 'inactive'
-  }
-]
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    email: 'sarah.chen@company.com',
-    role: 'admin',
-    status: 'active',
-    lastActive: '2024-01-25T10:30:00Z',
-    joinedAt: '2023-06-15',
-    avatar: 'SC'
-  },
-  {
-    id: '2',
-    name: 'Michael Rodriguez',
-    email: 'michael.r@company.com',
-    role: 'editor',
-    status: 'active',
-    lastActive: '2024-01-25T09:15:00Z',
-    joinedAt: '2023-08-20',
-    avatar: 'MR'
-  },
-  {
-    id: '3',
-    name: 'Emma Thompson',
-    email: 'emma.thompson@company.com',
-    role: 'viewer',
-    status: 'active',
-    lastActive: '2024-01-24T16:45:00Z',
-    joinedAt: '2023-11-03',
-    avatar: 'ET'
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    email: 'david.kim@company.com',
-    role: 'editor',
-    status: 'inactive',
-    lastActive: '2024-01-20T14:20:00Z',
-    joinedAt: '2023-09-12',
-    avatar: 'DK'
-  }
-]
-
-const mockAnalytics: AnalyticsData = {
-  totalResources: 47,
-  totalUsers: 128,
-  activeUsers: 89,
-  totalViews: 15640,
-  monthlyGrowth: 12.5,
-  topResources: [
-    { name: 'Company Guidelines', views: 1247 },
-    { name: 'Design System', views: 892 },
-    { name: 'API Reference', views: 634 },
-    { name: 'Training Materials', views: 423 }
-  ],
-  userActivity: [
-    { date: '2024-01-20', users: 45 },
-    { date: '2024-01-21', users: 52 },
-    { date: '2024-01-22', users: 38 },
-    { date: '2024-01-23', users: 61 },
-    { date: '2024-01-24', users: 47 },
-    { date: '2024-01-25', users: 58 }
-  ]
+  profile_image?: string
 }
 
 const sidebarLinks = [
@@ -212,68 +89,203 @@ const sidebarLinks = [
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('resources')
-  const [resources, setResources] = useState<Resource[]>(mockResources)
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [resources, setResources] = useState<Resource[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [selectedResources, setSelectedResources] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [userSearchTerm, setUserSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState<string>('all')
   const [showAddResourceDialog, setShowAddResourceDialog] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const [newResource, setNewResource] = useState({
-    name: '',
     url: '',
-    description: '',
-    category: '',
-    icon: ''
+    button_text: ''
   })
-
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (activeTab === 'resources') {
+      loadLinks()
+    } else if (activeTab === 'users') {
+      loadUsers()
+    }
+  }, [activeTab])
+
+  const loadLinks = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('No authentication token found')
+
+      const response = await fetch('/api/links', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+
+      if (!response.ok) throw new Error('Failed to fetch links')
+      const data = await response.json()
+      setResources(data)
+    } catch (error) {
+      console.error('Error loading links:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load links',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const loadUsers = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error('No authentication token found')
+
+      const response = await fetch('/api/users', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+
+      if (!response.ok) throw new Error('Failed to fetch users')
+      const data = await response.json()
+      setUsers(data)
+    } catch (error) {
+      console.error('Error loading users:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to load users',
+        variant: 'destructive'
+      })
+    }
+  }
 
   const validateResourceForm = () => {
     const errors: {[key: string]: string} = {}
 
-    if (!newResource.name.trim()) {
-      errors.name = 'Name is required'
-    }
-    if (!newResource.url.trim()) {
+    if (currentStep === 1 && !newResource.url.trim()) {
       errors.url = 'URL is required'
     }
-    if (!newResource.description.trim()) {
-      errors.description = 'Description is required'
-    }
-    if (!newResource.category) {
-      errors.category = 'Category is required'
+    if (currentStep === 2 && !newResource.button_text.trim()) {
+      errors.button_text = 'Button text is required'
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
 
-  const handleAddResource = () => {
+  const nextStep = () => {
     if (validateResourceForm()) {
-      const date = new Date().toISOString().split('T')[0] || new Date().toLocaleDateString('en-CA')
-      const resource: Resource = {
-        id: Date.now().toString(),
-        ...newResource,
-        usage: 0,
-        createdAt: date,
-        status: 'active'
-      }
-      setResources(prev => [...prev, resource])
-      setNewResource({ name: '', url: '', description: '', category: '', icon: '' })     
-      setShowAddResourceDialog(false)
-      setFormErrors({})
+      setCurrentStep(prev => prev + 1)
     }
   }
 
-  const handleDeleteResource = (id: string) => {
-    setResources(prev => prev.filter(resource => resource.id !== id))
-    setSelectedResources(prev => prev.filter(resId => resId !== id))
+  const prevStep = () => {
+    setCurrentStep(prev => prev - 1)
   }
 
-  const handleBulkDelete = () => {
-    setResources(prev => prev.filter(resource => !selectedResources.includes(resource.id)))
-    setSelectedResources([])
+  const handleAddResource = async () => {
+    if (validateResourceForm()) {
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error("No authentication token found")
+
+        const response = await fetch('/api/links', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newResource)
+        })
+
+        if (!response.ok) throw new Error("Failed to add resource")
+
+        const data = await response.json()
+        toast({
+          title: 'Success',
+          description: data.message || 'Link added successfully',
+        })
+        
+        loadLinks()
+        setNewResource({ url: '', button_text: '' })
+        setCurrentStep(1)
+        setShowAddResourceDialog(false)
+        setFormErrors({})
+      } catch (error) {
+        console.error("Error adding resource:", error)
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to add resource',
+          variant: 'destructive'
+        })
+      }
+    }
+  }
+
+  const handleDeleteResource = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error("No authentication token found")
+
+      const response = await fetch(`/api/links/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+
+      if (!response.ok) throw new Error('Failed to delete link')
+
+      const data = await response.json()
+      toast({
+        title: 'Success',
+        description: data.message || 'Link deleted successfully',
+      })
+      
+      loadLinks()
+    } catch (error) {
+      console.error('Error deleting resource:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete resource',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error("No authentication token found")
+
+      const response = await fetch('/api/links/bulk-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ ids: selectedResources })
+      })
+
+      if (!response.ok) throw new Error('Failed to delete resources')
+
+      const data = await response.json()
+      toast({
+        title: 'Success',
+        description: data.message || 'Resources deleted successfully',
+      })
+      
+      loadLinks()
+      setSelectedResources([])
+    } catch (error) {
+      console.error('Error bulk deleting resources:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete resources',
+        variant: 'destructive'
+      })
+    }
   }
 
   const handleSelectResource = (id: string) => {
@@ -293,27 +305,79 @@ export default function AdminPanel() {
     )
   }
 
-  const handleChangeUserRole = (userId: string, newRole: 'admin' | 'editor' | 'viewer') => {
-    setUsers(prev => prev.map(user =>
-      user.id === userId ? { ...user, role: newRole } : user
-    ))
+  const handleChangeUserRole = async (userId: string, newRole: 'admin' | 'editor' | 'user') => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error("No authentication token found")
+
+      const response = await fetch(`/api/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ role: newRole })
+      })
+
+      if (!response.ok) throw new Error('Failed to change user role')
+
+      const data = await response.json()
+      toast({
+        title: 'Success',
+        description: data.message || 'User role updated successfully',
+      })
+      
+      loadUsers()
+    } catch (error) {
+      console.error('Error changing user role:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to change user role',
+        variant: 'destructive'
+      })
+    }
   }
 
-  const handleDeactivateUser = (userId: string) => {
-    setUsers(prev => prev.map(user =>
-      user.id === userId ? { ...user, status: 'inactive' } : user
-    ))
+  const handleDeactivateUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error("No authentication token found")
+
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+
+      if (!response.ok) throw new Error('Failed to deactivate user')
+
+      const data = await response.json()
+      toast({
+        title: 'Success',
+        description: data.message || 'User deactivated successfully',
+      })
+      
+      loadUsers()
+    } catch (error) {
+      console.error('Error deactivating user:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to deactivate user',
+        variant: 'destructive'
+      })
+    }
   }
 
   const filteredResources = resources.filter(resource =>
-    resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.category.toLowerCase().includes(searchTerm.toLowerCase())
+    resource.button_text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    resource.url?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) 
+                         user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                         user.username?.toLowerCase().includes(userSearchTerm.toLowerCase())
     const matchesRole = filterRole === 'all' || user.role === filterRole
     return matchesSearch && matchesRole
   })
@@ -444,95 +508,76 @@ export default function AdminPanel() {
                             </DialogTrigger>
                             <DialogContent className="bg-surface border-border">
                               <DialogHeader>
-                                <DialogTitle className="text-foreground">Add New Resource</DialogTitle>
+                                <DialogTitle className="text-foreground">
+                                  {currentStep === 1 ? 'Step 1: Enter URL' : 'Step 2: Enter Button Text'}
+                                </DialogTitle>
                                 <DialogDescription className="text-muted-foreground">    
-                                  Create a new resource for your team to access
+                                  {currentStep === 1 ? 'Provide the link URL' : 'Set the display text for the button'}
                                 </DialogDescription>
                               </DialogHeader>
 
                               <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="name" className="text-foreground">Name</Label>
-                                  <Input
-                                    id="name"
-                                    value={newResource.name}
-                                    onChange={(e) => setNewResource(prev => ({ ...prev, name: e.target.value }))}
-                                    placeholder="Enter resource name"
-                                    className={`bg-input border-border text-foreground ${formErrors.name ? 'border-destructive' : ''}`}
-                                  />
-                                  {formErrors.name && (
-                                    <p className="text-destructive text-sm mt-1">{formErrors.name}</p>
-                                  )}
-                                </div>
+                                {currentStep === 1 && (
+                                  <div>
+                                    <Label htmlFor="url" className="text-foreground">URL</Label>
+                                    <Input
+                                      id="url"
+                                      value={newResource.url}
+                                      onChange={(e) => setNewResource(prev => ({ ...prev, url: e.target.value }))}
+                                      placeholder="https://example.com"
+                                      className={`bg-input border-border text-foreground ${formErrors.url ? 'border-destructive' : ''}`}
+                                    />
+                                    {formErrors.url && (
+                                      <p className="text-destructive text-sm mt-1">{formErrors.url}</p>
+                                    )}
+                                  </div>
+                                )}
 
-                                <div>
-                                  <Label htmlFor="url" className="text-foreground">URL</Label>
-                                  <Input
-                                    id="url"
-                                    value={newResource.url}
-                                    onChange={(e) => setNewResource(prev => ({ ...prev, url: e.target.value }))}
-                                    placeholder="/resource-path"
-                                    className={`bg-input border-border text-foreground ${formErrors.url ? 'border-destructive' : ''}`}
-                                  />
-                                  {formErrors.url && (
-                                    <p className="text-destructive text-sm mt-1">{formErrors.url}</p>
-                                  )}
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="category" className="text-foreground">Category</Label>
-                                  <Select value={newResource.category} onValueChange={(value) => setNewResource(prev => ({ ...prev, category: value }))}>
-                                    <SelectTrigger className={`bg-input border-border text-foreground ${formErrors.category ? 'border-destructive' : ''}`}>
-                                      <SelectValue placeholder="Select category" />      
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-popover border-border"> 
-                                      <SelectItem value="Documentation">Documentation</SelectItem>
-                                      <SelectItem value="Design">Design</SelectItem>     
-                                      <SelectItem value="Technical">Technical</SelectItem>
-                                      <SelectItem value="HR">HR</SelectItem>
-                                      <SelectItem value="Marketing">Marketing</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  {formErrors.category && (
-                                    <p className="text-destructive text-sm mt-1">{formErrors.category}</p>
-                                  )}
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="icon" className="text-foreground">Icon (Emoji)</Label>
-                                  <Input
-                                    id="icon"
-                                    value={newResource.icon}
-                                    onChange={(e) => setNewResource(prev => ({ ...prev, icon: e.target.value }))}
-                                    placeholder="📋"
-                                    className="bg-input border-border text-foreground"   
-                                    maxLength={2}
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="description" className="text-foreground">Description</Label>
-                                  <Textarea
-                                    id="description"
-                                    value={newResource.description}
-                                    onChange={(e) => setNewResource(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder="Describe what this resource contains"   
-                                    className={`bg-input border-border text-foreground ${formErrors.description ? 'border-destructive' : ''}`}
-                                    rows={3}
-                                  />
-                                  {formErrors.description && (
-                                    <p className="text-destructive text-sm mt-1">{formErrors.description}</p>
-                                  )}
-                                </div>
+                                {currentStep === 2 && (
+                                  <div>
+                                    <Label htmlFor="button_text" className="text-foreground">Button Text</Label>
+                                    <Input
+                                      id="button_text"
+                                      value={newResource.button_text}
+                                      onChange={(e) => setNewResource(prev => ({ ...prev, button_text: e.target.value }))}
+                                      placeholder="Click here"
+                                      className={`bg-input border-border text-foreground ${formErrors.button_text ? 'border-destructive' : ''}`}
+                                    />
+                                    {formErrors.button_text && (
+                                      <p className="text-destructive text-sm mt-1">{formErrors.button_text}</p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
 
-                              <div className="flex justify-end gap-3">
-                                <Button variant="outline" onClick={() => setShowAddResourceDialog(false)}>
-                                  Cancel
-                                </Button>
-                                <Button onClick={handleAddResource} className="bg-primary text-primary-foreground">
-                                  Add Resource
-                                </Button>
+                              <div className="flex justify-between gap-3">
+                                <div>
+                                  {currentStep === 2 && (
+                                    <Button variant="outline" onClick={prevStep}>
+                                      <ChevronLeft className="h-4 w-4 mr-2" />
+                                      Back
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="flex gap-3">
+                                  <Button variant="outline" onClick={() => {
+                                    setShowAddResourceDialog(false)
+                                    setCurrentStep(1)
+                                    setNewResource({ url: '', button_text: '' })
+                                    setFormErrors({})
+                                  }}>
+                                    Cancel
+                                  </Button>
+                                  {currentStep === 1 ? (
+                                    <Button onClick={nextStep}>
+                                      Next <ChevronRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                  ) : (
+                                    <Button onClick={handleAddResource}>
+                                      Add Resource
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </DialogContent>
                           </Dialog>
@@ -564,11 +609,9 @@ export default function AdminPanel() {
                                   className="border-border"
                                 />
                               </TableHead>
-                              <TableHead className="text-foreground">Resource</TableHead>
-                              <TableHead className="text-foreground">Category</TableHead>
-                              <TableHead className="text-foreground">Usage</TableHead>   
-                              <TableHead className="text-foreground">Status</TableHead>  
-                              <TableHead className="text-foreground">Created</TableHead> 
+                              <TableHead className="text-foreground">Button Text</TableHead>
+                              <TableHead className="text-foreground">URL</TableHead>
+                              <TableHead className="text-foreground">Created</TableHead>
                               <TableHead className="text-right text-foreground">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -582,39 +625,17 @@ export default function AdminPanel() {
                                     className="border-border"
                                   />
                                 </TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-lg">{resource.icon}</span>     
-                                    <div>
-                                      <div className="font-medium text-foreground">{resource.name}</div>
-                                      <div className="text-sm text-muted-foreground">{resource.description}</div>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                                    {resource.category}
-                                  </Badge>
+                                <TableCell className="font-medium text-foreground">
+                                  {resource.button_text}
                                 </TableCell>
                                 <TableCell className="text-muted-foreground">
-                                  {resource.usage.toLocaleString()} views
-                                </TableCell>
-                                <TableCell>
-                                  <Badge
-                                    variant={resource.status === 'active' ? 'default' : 'secondary'}
-                                    className={resource.status === 'active' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
-                                  >
-                                    {resource.status}
-                                  </Badge>
+                                  {resource.url}
                                 </TableCell>
                                 <TableCell className="text-muted-foreground">
                                   {formatDate(resource.createdAt)}
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex items-center justify-end gap-2">  
-                                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
                                         <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
@@ -625,7 +646,7 @@ export default function AdminPanel() {
                                         <AlertDialogHeader>
                                           <AlertDialogTitle className="text-foreground">Delete Resource</AlertDialogTitle>
                                           <AlertDialogDescription className="text-muted-foreground">
-                                            Are you sure you want to delete "{resource.name}"? This action cannot be undone.
+                                            Are you sure you want to delete this link?
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
@@ -680,117 +701,108 @@ export default function AdminPanel() {
                             <SelectItem value="all">All Roles</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="editor">Editor</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
+                            <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </CardHeader>
 
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredUsers.map((user) => (
-                          <Card key={user.id} className="bg-muted border-border">        
-                            <CardContent className="p-6">
-                              <div className="flex items-start justify-between mb-4">    
-                                <div className="flex items-center gap-3">
-                                  <Avatar>
-                                    <AvatarFallback className="bg-primary text-primary-foreground">
-                                      {user.avatar}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <h3 className="font-medium text-foreground">{user.name}</h3>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="border-border hover:bg-muted/5">
+                              <TableHead className="text-foreground">Name</TableHead>
+                              <TableHead className="text-foreground">Username</TableHead>
+                              <TableHead className="text-foreground">Role</TableHead>
+                              <TableHead className="text-foreground">Status</TableHead>
+                              <TableHead className="text-right text-foreground">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {filteredUsers.map((user) => (
+                              <TableRow key={user.id} className="border-border hover:bg-muted/5">
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <Avatar>
+                                      {user.profile_image ? (
+                                        <img 
+                                          src={`/uploads/${user.profile_image}`} 
+                                          alt={user.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <AvatarFallback className="bg-primary text-primary-foreground">
+                                          {user.name.charAt(0)}
+                                        </AvatarFallback>
+                                      )}
+                                    </Avatar>
+                                    <div>
+                                      <div className="font-medium text-foreground">{user.name}</div>
+                                      <div className="text-sm text-muted-foreground">{user.email}</div>
+                                    </div>
                                   </div>
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                  <div className={`w-2 h-2 rounded-full ${user.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}`} />
-                                  <span className="text-xs text-muted-foreground">{user.status}</span>
-                                </div>
-                              </div>
-
-                              <div className="space-y-2 mb-4">
-                                <div className="flex items-center justify-between">      
-                                  <span className="text-sm text-muted-foreground">Role</span>
-                                  <Badge
-                                    variant={user.role === 'admin' ? 'default' : 'secondary'}
-                                    className={
-                                      user.role === 'admin' ? 'bg-primary text-primary-foreground' :
-                                      user.role === 'editor' ? 'bg-muted text-muted-foreground' :
-                                      'bg-muted text-muted-foreground'
-                                    }
-                                  >
-                                    {user.role}
-                                  </Badge>
-                                </div>
-
-                                <div className="flex items-center justify-between">      
-                                  <span className="text-sm text-muted-foreground">Last Active</span>
-                                  <span className="text-sm text-foreground">{formatLastActive(user.lastActive)}</span>
-                                </div>
-
-                                <div className="flex items-center justify-between">      
-                                  <span className="text-sm text-muted-foreground">Joined</span>
-                                  <span className="text-sm text-foreground">{formatDate(user.joinedAt)}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="flex-1 text-muted-foreground hover:text-foreground">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View
-                                </Button>
-
-                                <div className="relative">
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                  {user.username}
+                                </TableCell>
+                                <TableCell>
                                   <Select
                                     value={user.role}
                                     onValueChange={(value) => handleChangeUserRole(user.id, value as any)}
                                   >
-                                    <SelectTrigger className="h-8 px-2 text-xs bg-transparent border-none hover:bg-accent/10">
-                                      <div className="flex items-center gap-1">
-                                        <UserCog className="h-3 w-3" />
-                                        <span>Role</span>
-                                      </div>
+                                    <SelectTrigger className="w-[120px] bg-input border-border text-foreground">
+                                      <SelectValue placeholder="Select role" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-popover border-border"> 
-                                      <SelectItem value="admin">Admin</SelectItem>       
-                                      <SelectItem value="editor">Editor</SelectItem>     
-                                      <SelectItem value="viewer">Viewer</SelectItem>     
+                                    <SelectContent className="bg-popover border-border">
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="editor">Editor</SelectItem>
+                                      <SelectItem value="user">User</SelectItem>
                                     </SelectContent>
                                   </Select>
-                                </div>
-
-                                {user.status === 'active' && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
-                                        <UserX className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-surface border-border">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle className="text-foreground">Deactivate User</AlertDialogTitle>
-                                        <AlertDialogDescription className="text-muted-foreground">
-                                          Are you sure you want to deactivate {user.name}? They will lose access to the platform.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>    
-                                        <AlertDialogAction
-                                          onClick={() => handleDeactivateUser(user.id)}  
-                                          className="bg-destructive text-destructive-foreground"
-                                        >
-                                          Deactivate
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant={user.status === 'active' ? 'default' : 'secondary'}
+                                    className={user.status === 'active' ? 'bg-green-500 text-primary-foreground' : 'bg-muted text-muted-foreground'}
+                                  >
+                                    {user.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    {user.status === 'active' && (
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                                            <UserX className="h-4 w-4" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent className="bg-surface border-border">
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle className="text-foreground">Deactivate User</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-muted-foreground">
+                                              Are you sure you want to deactivate {user.name}? They will lose access to the platform.
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>    
+                                            <AlertDialogAction
+                                              onClick={() => handleDeactivateUser(user.id)}  
+                                              className="bg-destructive text-destructive-foreground"
+                                            >
+                                              Deactivate
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
                     </CardContent>
                   </Card>
@@ -803,7 +815,7 @@ export default function AdminPanel() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-muted-foreground">Total Resources</p>
-                            <p className="text-2xl font-semibold text-foreground">{mockAnalytics.totalResources}</p>
+                            <p className="text-2xl font-semibold text-foreground">{resources.length}</p>
                           </div>
                           <Database className="h-8 w-8 text-primary" />
                         </div>
@@ -815,7 +827,7 @@ export default function AdminPanel() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-muted-foreground">Total Users</p> 
-                            <p className="text-2xl font-semibold text-foreground">{mockAnalytics.totalUsers}</p>
+                            <p className="text-2xl font-semibold text-foreground">{users.length}</p>
                           </div>
                           <Users className="h-8 w-8 text-primary" />
                         </div>
@@ -827,7 +839,9 @@ export default function AdminPanel() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-muted-foreground">Active Users</p>
-                            <p className="text-2xl font-semibold text-foreground">{mockAnalytics.activeUsers}</p>
+                            <p className="text-2xl font-semibold text-foreground">
+                              {users.filter(u => u.status === 'active').length}
+                            </p>
                           </div>
                           <Activity className="h-8 w-8 text-primary" />
                         </div>
@@ -839,58 +853,9 @@ export default function AdminPanel() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-muted-foreground">Monthly Growth</p>
-                            <p className="text-2xl font-semibold text-foreground">+{mockAnalytics.monthlyGrowth}%</p>
+                            <p className="text-2xl font-semibold text-foreground">+12.5%</p>
                           </div>
                           <TrendingUp className="h-8 w-8 text-primary" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className="bg-surface border-border">
-                      <CardHeader>
-                        <CardTitle className="text-foreground">Top Resources</CardTitle> 
-                        <CardDescription className="text-muted-foreground">Most accessed resources this month</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {mockAnalytics.topResources.map((resource, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-primary">#{index + 1}</span>
-                                </div>
-                                <span className="font-medium text-foreground">{resource.name}</span>
-                              </div>
-                              <span className="text-sm text-muted-foreground">{resource.views} views</span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-surface border-border">
-                      <CardHeader>
-                        <CardTitle className="text-foreground">User Activity</CardTitle> 
-                        <CardDescription className="text-muted-foreground">Daily active users over the past week</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {mockAnalytics.userActivity.map((activity, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">{formatDate(activity.date)}</span>
-                              <div className="flex items-center gap-3">
-                                <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-primary rounded-full"
-                                    style={{ width: `${(activity.users / 70) * 100}%` }} 
-                                  />
-                                </div>
-                                <span className="text-sm font-medium text-foreground w-8">{activity.users}</span>
-                              </div>
-                            </div>
-                          ))}
                         </div>
                       </CardContent>
                     </Card>
